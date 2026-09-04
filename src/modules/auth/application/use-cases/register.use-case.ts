@@ -1,7 +1,8 @@
 import { Inject, Injectable, ConflictException } from '@nestjs/common';
-import { IUserRepository } from '../../domain/repositories/iuser.repository';
+import type { IUserRepository } from '../../domain/repositories/iuser.repository';
 import { RegisterDto } from '../dtos/register.dto';
 import { User } from '../../domain/entities/user.entity';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class RegisterUseCase {
@@ -15,12 +16,14 @@ export class RegisterUseCase {
       throw new ConflictException('El usuario con este correo ya existe');
     }
 
-    // Aquí iría el hashing real (ej. bcrypt), se deja el mapeo directo para esta estructura inicial
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(dto.password, salt);
+
     const user = new User(
       crypto.randomUUID(), 
       dto.email,
-      dto.password, 
-      'vendor',
+      hash, 
+      'vendor', // Por defecto todos son vendors en este MVP
       new Date(),
     );
 
