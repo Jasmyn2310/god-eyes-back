@@ -20,11 +20,12 @@ export class RegisterUseCase {
     const hash = await bcrypt.hash(dto.password, salt);
 
     const user = new User(
-      crypto.randomUUID(), 
+      crypto.randomUUID(),
       dto.email,
-      hash, 
-      'vendor', // Por defecto todos son vendors en este MVP
+      hash,
+      'vendor',
       new Date(),
+      dto.name ?? null,
     );
 
     return this.userRepository.save(user);

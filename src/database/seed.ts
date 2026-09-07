@@ -1,9 +1,9 @@
 import 'dotenv/config';
+import * as bcrypt from 'bcrypt';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { users, devices, locations } from './schema';
 import { v4 as uuidv4 } from 'uuid';
-import * as bcrypt from 'bcrypt';
+import { alerts, devices, geofences, locations, plans, users } from './schema';
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -18,76 +18,154 @@ const VENDOR_TYPES = ['Desayuno', 'Snack', 'Bebidas', 'Postres', 'Almuerzo'];
 const PRICE_RANGES = ['$1 - $3', '$0.5 - $2', '$1.5 - $4', '$2 - $5', '$1 - $2'];
 
 const MOCK_NAMES = [
-  'Doña Flor', 'El Tío', 'María Jugos', 'Don Pepe', 'Rosa Empanadas',
-  'Carlos Desayunos', 'Juana Postres', 'Luis Snacks', 'Ana Bebidas', 'Pedro Almuerzos',
-  'Carmen Tamales', 'Jorge Sanguches', 'Lucía Arepas', 'Miguel Tacos', 'Elena Churros',
-  'Andrés Ceviche', 'Sofía Helados', 'Diego Anticuchos', 'Valeria Picarones', 'Hugo Salchipapas'
+  'Doña Flor',
+  'El Tío',
+  'María Jugos',
+  'Don Pepe',
+  'Rosa Empanadas',
+  'Carlos Desayunos',
+  'Juana Postres',
+  'Luis Snacks',
+  'Ana Bebidas',
+  'Pedro Almuerzos',
+  'Carmen Tamales',
+  'Jorge Sanguches',
+  'Lucía Arepas',
+  'Miguel Tacos',
+  'Elena Churros',
+  'Andrés Ceviche',
+  'Sofía Helados',
+  'Diego Anticuchos',
+  'Valeria Picarones',
+  'Hugo Salchipapas',
 ];
 
-async function seed() {
-  console.log('🌱 Starting database seeding...');
+interface SeedPlan {
+  id: string;
+  name: string;
+  price: string;
+  description: string;
+  isPopular: boolean;
+}
 
+const SEED_PLANS: SeedPlan[] = [
+  {
+    id: 'plan-basic',
+    name: 'Plan Básico',
+    price: '0.00',
+    description: 'Aparece en el mapa, Actualiza tu ubicación manual, Perfil básico',
+    isPopular: false,
+  },
+  {
+    id: 'plan-premium',
+    name: 'Plan Premium',
+    price: '4.99',
+    description: 'Todo lo del plan básico, Seguimiento en tiempo real automático, Destacado en las búsquedas, Catálogo de productos con fotos',
+    isPopular: true,
+  },
+];
+
+async function seed(): Promise<void> {
   try {
-    const passwordHash = await bcrypt.hash('vendor123', 10);
-    const vendors: any[] = [];
+    await db.delete(alerts);
+    await db.delete(locations);
+    await db.delete(geofences);
+    await db.delete(devices);
+    await db.delete(users);
+    await db.delete(plans);
 
-    // Base coordinates (Lima, Peru center as an example)
-    const baseLat = -12.0464;
-    const baseLng = -77.0428;
+    for (const plan of SEED_PLANS) {
+      await db.insert(plans).values(plan);
+    }
 
-    for (let i = 0; i < 20; i++) {
+    const adminPasswordHash = await bcrypt.hash('admin123', 10);
+    await db.insert(users).values({
+      id: uuidv4(),
+      email: 'admin@godeyes.com',
+      passwordHash: adminPasswordHash,
+      name: 'Administrador GodEyes',
+      photoUrl: 'https://ui-avatars.com/api/?name=Admin+GodEyes&background=0D8ABC&color=fff&size=150',
+      role: 'ADMIN',
+    });
+
+    const vendorPasswordHash = await bcrypt.hash('vendor123', 10);
+    const baseLatitude = -12.0464;
+    const baseLongitude = -77.0428;
+
+    for (let index = 0; index < 20; index++) {
       const vendorId = uuidv4();
       const deviceId = uuidv4();
       const locationId = uuidv4();
 
-      const name = MOCK_NAMES[i % MOCK_NAMES.length];
-      const type = VENDOR_TYPES[i % VENDOR_TYPES.length];
-      const priceRange = PRICE_RANGES[i % PRICE_RANGES.length];
-      // Generates a mock photo using an avatar service
+      const name = MOCK_NAMES[index % MOCK_NAMES.length];
+      const vendorType = VENDOR_TYPES[index % VENDOR_TYPES.length];
+      const priceRange = PRICE_RANGES[index % PRICE_RANGES.length];
       const photoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=150`;
 
-      // Insert User
       await db.insert(users).values({
         id: vendorId,
-        email: `vendor${i}@godeyes.test`,
-        passwordHash,
+        email: `vendor${index}@godeyes.test`,
+        passwordHash: vendorPasswordHash,
         name,
         photoUrl,
-        vendorType: type,
+        vendorType,
         priceRange,
         role: 'vendor',
       });
 
-      // Insert Device
+      const calculatedBattery = (70 + ((index * 3) % 28)).toFixed(2);
       await db.insert(devices).values({
         id: deviceId,
         userId: vendorId,
-        name: `Device Vendor ${i}`,
+        name: `Dispositivo ${name}`,
+        batteryLevel: calculatedBattery,
         status: 'online',
+        lastConnection: new Date(),
       });
 
-      // Offset location slightly for each vendor so they don't overlap
-      // Approx 1km radius dispersion
-      const latOffset = (Math.random() - 0.5) * 0.02;
-      const lngOffset = (Math.random() - 0.5) * 0.02;
+      const latitudeOffset = (Math.random() - 0.5) * 0.02;
+      const longitudeOffset = (Math.random() - 0.5) * 0.02;
+      const currentLatitude = (baseLatitude + latitudeOffset).toFixed(8);
+      const currentLongitude = (baseLongitude + longitudeOffset).toFixed(8);
 
-      // Insert Location
       await db.insert(locations).values({
         id: locationId,
-        deviceId: deviceId,
-        latitude: (baseLat + latOffset).toString() as any,
-        longitude: (baseLng + lngOffset).toString() as any,
+        deviceId,
+        latitude: currentLatitude,
+        longitude: currentLongitude,
+        speed: index % 2 === 0 ? '1.20' : '0.00',
+        accuracy: '5.00',
+        timestamp: new Date(),
       });
 
-      vendors.push({ vendorId, name });
-    }
+      if (index < 5) {
+        await db.insert(geofences).values({
+          id: uuidv4(),
+          userId: vendorId,
+          name: `Zona Operativa ${name}`,
+          latitude: currentLatitude,
+          longitude: currentLongitude,
+          radius: '500.00',
+          isActive: true,
+        });
+      }
 
-    console.log(`✅ Seeded ${vendors.length} vendors with devices and locations.`);
+      if (index === 0 || index === 3) {
+        await db.insert(alerts).values({
+          id: uuidv4(),
+          deviceId,
+          type: 'battery_warning',
+          message: `Dispositivo ${name} con batería al ${calculatedBattery}%`,
+          isRead: false,
+        });
+      }
+    }
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error('Error during database seeding:', error);
+    process.exitCode = 1;
   } finally {
     await sql.end();
   }
 }
 
-seed();
+void seed();

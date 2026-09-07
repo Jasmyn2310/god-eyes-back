@@ -1,10 +1,10 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Get } from '@nestjs/common';
-import { RegisterUseCase } from '../../application/use-cases/register.use-case';
-import { LoginUseCase } from '../../application/use-cases/login.use-case';
-import { RegisterDto } from '../../application/dtos/register.dto';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { LoginDto } from '../../application/dtos/login.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { RegisterDto } from '../../application/dtos/register.dto';
+import { AuthUserResponse, LoginUseCase } from '../../application/use-cases/login.use-case';
+import { RegisterUseCase } from '../../application/use-cases/register.use-case';
 import { CurrentUser } from '../decorators/current-user.decorator';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -29,10 +29,9 @@ export class AuthController {
     return this.loginUseCase.execute(loginDto);
   }
 
-  // Ruta de prueba protegida
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getProfile(@CurrentUser() user: any) {
+  getProfile(@CurrentUser() user: AuthUserResponse): AuthUserResponse {
     return user;
   }
 }
