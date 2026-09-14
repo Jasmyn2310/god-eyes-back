@@ -12,4 +12,8 @@ export class RegisterDto {
   @IsOptional()
   @IsString({ message: 'El nombre debe ser una cadena de texto' })
   name?: string;
+
+  @IsOptional()
+  @IsString({ message: 'El rol debe ser una cadena de texto' })
+  role?: string;
 }

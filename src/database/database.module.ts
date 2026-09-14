@@ -14,7 +14,7 @@ export const DRIZZLE = 'DRIZZLE';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const connectionString = configService.get<string>('database.url');
-        const queryClient = postgres(connectionString!, { ssl: 'require' });
+        const queryClient = postgres(connectionString!, { ssl: 'require', prepare: false });
         return drizzle(queryClient, { schema });
       },
     },

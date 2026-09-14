@@ -6,6 +6,7 @@ import { LoginDto } from '../dtos/login.dto';
 
 export class AuthUserResponse {
   id!: string;
+  userId?: string;
   email!: string;
   role!: string;
   name?: string | null;

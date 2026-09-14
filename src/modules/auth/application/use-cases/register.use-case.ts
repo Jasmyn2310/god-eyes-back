@@ -23,7 +23,7 @@ export class RegisterUseCase {
       crypto.randomUUID(),
       dto.email,
       hash,
-      'vendor',
+      dto.role || 'vendor',
       new Date(),
       dto.name ?? null,
     );
