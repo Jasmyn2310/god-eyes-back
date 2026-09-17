@@ -8,7 +8,7 @@ export class GetPlansUseCase {
     @Inject('IPlanRepository') private readonly planRepository: IPlanRepository,
   ) {}
 
-  async execute(): Promise<Plan[]> {
-    return this.planRepository.findAll();
+  async execute(targetRole?: string): Promise<Plan[]> {
+    return this.planRepository.findAll(targetRole);
   }
 }

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, decimal, integer } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -66,6 +66,8 @@ export const plans = pgTable('plans', {
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   description: text('description').notNull(),
   isPopular: boolean('is_popular').default(false).notNull(),
+  targetRole: text('target_role').default('vendor').notNull(),
+  durationDays: integer('duration_days').default(30).notNull(),
 });
 
 export const devices = pgTable('devices', {

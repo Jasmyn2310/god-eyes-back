@@ -773,18 +773,40 @@ const AYACUCHO_VENDORS: SeedVendorData[] = [
 
 const SEED_PLANS = [
   {
-    id: 'plan-basic',
-    name: 'Plan Básico',
-    price: '0.00',
-    description: 'Aparece en el mapa, Actualiza tu ubicación manual, Perfil básico',
+    id: 'plan-vendedor-basico',
+    name: 'Vendedor Básico',
+    price: '15.00',
+    description: 'Aparece en el mapa en vivo, perfil comercial y catálogo de hasta 10 productos.',
     isPopular: false,
+    targetRole: 'vendor',
+    durationDays: 30,
   },
   {
-    id: 'plan-premium',
-    name: 'Plan Premium',
-    price: '4.99',
-    description: 'Todo lo del plan básico, Seguimiento en tiempo real automático, Destacado en las búsquedas, Catálogo de productos con fotos',
+    id: 'plan-vendedor-pro',
+    name: 'Vendedor Pro',
+    price: '39.00',
+    description: 'Seguimiento GPS en tiempo real, catálogo ilimitado, promociones destacadas y reporte de ventas.',
     isPopular: true,
+    targetRole: 'vendor',
+    durationDays: 30,
+  },
+  {
+    id: 'plan-cliente-plus',
+    name: 'Usuario Explorador',
+    price: '9.90',
+    description: 'Alertas de llegada de comerciantes favoritos, ofertas exclusivas y navegación sin anuncios.',
+    isPopular: false,
+    targetRole: 'client',
+    durationDays: 30,
+  },
+  {
+    id: 'plan-cliente-vip',
+    name: 'Usuario VIP GodEyes',
+    price: '19.90',
+    description: 'Acceso anticipado a promociones, cupones de descuento y geocercas personalizadas.',
+    isPopular: true,
+    targetRole: 'client',
+    durationDays: 30,
   },
 ];
 
